@@ -1,0 +1,1543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LocalGit</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+:root{
+  --bg:#0d1117;--bg2:#161b22;--bg3:#1c2128;
+  --border:#30363d;--border2:#21262d;
+  --fg:#e6edf3;--fg2:#7d8590;--fg3:#6e7681;
+  --blue:#58a6ff;--blue-e:#1f6feb;
+  --green:#3fb950;--green-e:#238636;
+  --red:#f85149;--yellow:#d29922;--purple:#a371f7;
+  --hover:rgba(110,118,129,.12);
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--fg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans",Helvetica,Arial,sans-serif;font-size:14px;line-height:1.5;min-height:100vh}
+a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
+button{cursor:pointer;font-family:inherit}
+input,textarea,select{font-family:inherit}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* ── HEADER ── */
+.hdr{position:sticky;top:0;z-index:100;background:var(--bg2);border-bottom:1px solid var(--border);height:62px;padding:0 16px;display:flex;align-items:center;gap:12px}
+.hdr-logo{display:flex;align-items:center;flex-shrink:0;color:#fff}
+.hdr-logo svg{fill:#fff}
+.hdr-search{position:relative}
+.hdr-search input{background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--fg2);padding:5px 12px 5px 32px;font-size:14px;outline:none;width:220px;transition:border-color .15s,width .15s,box-shadow .15s}
+.hdr-search input:focus{border-color:var(--blue-e);color:var(--fg);box-shadow:0 0 0 3px rgba(31,111,235,.3);width:280px}
+.hdr-search input::placeholder{color:var(--fg2)}
+.hdr-search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--fg2);font-size:12px;pointer-events:none}
+.hdr-nav{display:flex;gap:2px;margin-left:4px}
+.hdr-nav a{padding:6px 8px;font-weight:600;color:var(--fg);border-radius:6px;font-size:14px}
+.hdr-nav a:hover{background:var(--hover);text-decoration:none}
+.hdr-right{margin-left:auto;display:flex;align-items:center;gap:4px}
+.hdr-btn{background:none;border:none;color:var(--fg);padding:6px 8px;border-radius:6px;font-size:14px;display:flex;align-items:center;gap:6px}
+.hdr-btn:hover{background:var(--hover)}
+.avatar{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;flex-shrink:0;background:linear-gradient(135deg,var(--blue),var(--purple));user-select:none;overflow:hidden}
+.av20{width:20px;height:20px;font-size:9px}
+.av32{width:32px;height:32px;font-size:13px}
+.av64{width:64px;height:64px;font-size:24px}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:5px 16px;border-radius:6px;font-size:14px;font-weight:500;border:1px solid rgba(240,246,252,.1);background:var(--bg3);color:var(--fg);white-space:nowrap;transition:background .1s}
+.btn:hover{background:#2d333b;text-decoration:none;color:var(--fg)}
+.btn-green{background:var(--green-e);border-color:rgba(240,246,252,.1);color:#fff!important}
+.btn-green:hover{background:#2ea043}
+.btn-sm{padding:3px 12px;font-size:12px}
+.btn-red{background:transparent;color:var(--red);border-color:rgba(248,81,73,.4)}
+.btn-red:hover{background:var(--red);color:#fff}
+.btn-danger{background:#21262d;color:var(--red);border-color:rgba(240,246,252,.1)}
+.btn-danger:hover{background:var(--red);color:#fff}
+.btn-ghost{background:transparent;border:none;color:var(--fg2);padding:4px 8px;border-radius:6px;font-size:13px;display:inline-flex;align-items:center;gap:6px}
+.btn-ghost:hover{background:var(--hover);color:var(--fg)}
+.btn-grp{display:flex}
+.btn-grp .btn:not(:last-child){border-right:none;border-radius:6px 0 0 6px}
+.btn-grp .btn:last-child{border-radius:0 6px 6px 0;min-width:46px;justify-content:center}
+
+/* ── FORMS ── */
+.fg{margin-bottom:16px}
+.fl{display:block;font-weight:600;margin-bottom:6px;font-size:14px}
+.fl small{font-weight:400;color:var(--fg2);font-size:12px}
+.fi,.fta,.fsel{width:100%;padding:6px 12px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--fg);font-size:14px;outline:none;transition:border-color .15s,box-shadow .15s}
+.fi:focus,.fta:focus,.fsel:focus{border-color:var(--blue-e);box-shadow:0 0 0 3px rgba(31,111,235,.3)}
+.fi::placeholder,.fta::placeholder{color:var(--fg3)}
+.fta{resize:vertical;min-height:80px}
+.fsel{cursor:pointer}
+.fhint{font-size:12px;color:var(--fg2);margin-top:4px}
+.ferr{color:var(--red);font-size:12px;margin-top:4px}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.radio-opt{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:6px;cursor:pointer;margin-bottom:6px}
+.radio-opt:hover{background:var(--hover)}
+.radio-opt input[type=radio]{margin-top:3px;flex-shrink:0}
+.radio-opt-body small{color:var(--fg2);font-size:12px}
+
+/* ── MODAL ── */
+.ov{position:fixed;inset:0;z-index:500;background:rgba(1,4,9,.8);display:flex;align-items:center;justify-content:center;opacity:0;visibility:hidden;transition:opacity .2s,visibility .2s}
+.ov.open{opacity:1;visibility:visible}
+.ov-dialog{background:var(--bg2);border:1px solid var(--border);border-radius:12px;width:90%;max-width:560px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,.5);transform:scale(.97);transition:transform .2s}
+.ov.open .ov-dialog{transform:scale(1)}
+.ov-head{padding:16px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.ov-head h2{font-size:16px;font-weight:600}
+.ov-close{background:none;border:none;color:var(--fg2);font-size:20px;padding:2px 6px;border-radius:4px;line-height:1}
+.ov-close:hover{background:var(--hover);color:var(--fg)}
+.ov-body{padding:24px}
+.ov-foot{padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
+
+/* ── AUTH ── */
+.auth-page{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px}
+.auth-box{width:100%;max-width:340px}
+.auth-logo{text-align:center;margin-bottom:20px}
+.auth-logo svg{fill:#fff}
+.auth-card{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:24px}
+.auth-tabs{display:flex;border-bottom:1px solid var(--border);margin:-24px -24px 20px}
+.auth-tab{flex:1;padding:12px;text-align:center;font-weight:600;color:var(--fg2);cursor:pointer;border-bottom:2px solid transparent}
+.auth-tab.on{color:var(--fg);border-bottom-color:#f78166;background:var(--bg2)}
+.auth-submit{width:100%;padding:8px;font-size:15px;font-weight:600;margin-top:4px}
+.auth-switch{text-align:center;color:var(--fg2);font-size:12px;margin-top:12px}
+
+/* ── DASHBOARD ── */
+.dash-wrap{display:grid;grid-template-columns:296px 1fr;gap:24px;max-width:1280px;margin:0 auto;padding:24px 16px}
+.dash-side{}
+.user-pane{margin-bottom:20px}
+.user-name-big{font-size:20px;font-weight:600;margin-top:8px}
+.user-login{color:var(--fg2);font-size:16px;margin-bottom:6px}
+.stat-line{display:flex;align-items:center;gap:6px;font-size:14px;color:var(--fg);margin-bottom:6px}
+.stat-line i{color:var(--fg2);width:14px}
+.sec-title{font-size:14px;font-weight:600;color:var(--fg2);padding-bottom:6px;margin-bottom:6px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.repo-side-item{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border2);font-size:14px}
+.repo-side-item:last-child{border-bottom:none}
+.vis-badge{font-size:10px;border:1px solid var(--border);border-radius:20px;padding:0 7px;color:var(--fg2);white-space:nowrap}
+.dash-main{}
+.repos-bar{display:flex;gap:8px;margin-bottom:16px;align-items:center;flex-wrap:wrap}
+.repos-bar input{flex:1;min-width:200px}
+.repo-card{padding:16px;border:1px solid var(--border);border-radius:6px;margin-bottom:10px;transition:border-color .1s}
+.repo-card:hover{border-color:var(--fg2)}
+.repo-card-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px}
+.repo-card-name{font-size:16px;font-weight:600}
+.repo-card-desc{color:var(--fg2);font-size:14px;margin-bottom:8px}
+.repo-card-meta{display:flex;gap:16px;color:var(--fg2);font-size:12px;align-items:center;flex-wrap:wrap}
+.lang-dot{width:10px;height:10px;border-radius:50%;display:inline-block;vertical-align:middle;margin-right:4px}
+
+/* ── REPO TOPBAR ── */
+.repo-top{background:var(--bg2);border-bottom:1px solid var(--border);padding:16px 16px 0}
+.repo-crumb{display:flex;align-items:center;gap:6px;font-size:20px;margin-bottom:10px;flex-wrap:wrap}
+.repo-crumb .sep{color:var(--fg2);font-weight:300}
+.repo-crumb .rl{font-weight:600}
+.repo-btns{display:flex;gap:8px;flex-wrap:wrap}
+.repo-top-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;padding:0 0 10px}
+.unav{display:flex;overflow-x:auto;scrollbar-width:none}
+.unav::-webkit-scrollbar{display:none}
+.unav-item{padding:10px 16px;color:var(--fg2);font-size:14px;font-weight:600;border-bottom:2px solid transparent;white-space:nowrap;cursor:pointer;display:inline-flex;align-items:center;gap:7px;text-decoration:none}
+.unav-item:hover{color:var(--fg);text-decoration:none}
+.unav-item.on{color:var(--fg);border-bottom-color:#f78166}
+.unav-cnt{background:rgba(110,118,129,.2);border-radius:20px;padding:0 6px;font-size:11px}
+
+/* ── CODE VIEW ── */
+.repo-wrap{display:grid;grid-template-columns:1fr 296px;gap:24px;max-width:1280px;margin:0 auto;padding:24px 16px}
+.ctool{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.branch-btn{background:var(--bg2);border:1px solid rgba(240,246,252,.1);border-radius:6px;color:var(--fg);font-size:14px;font-weight:600;padding:5px 12px;display:flex;align-items:center;gap:8px;max-width:200px}
+.branch-btn span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.branch-btn:hover{background:var(--bg3)}
+.sp{flex:1}
+.cbar{background:var(--bg2);border:1px solid var(--border);border-radius:6px 6px 0 0;padding:10px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.chash{font-family:var(--mono);font-size:12px;background:rgba(110,118,129,.12);border-radius:6px;padding:2px 8px;color:var(--blue)}
+.ftbl{border:1px solid var(--border);border-top:none;border-radius:0 0 6px 6px;margin-bottom:16px;overflow:hidden}
+.frow{display:grid;grid-template-columns:20px 1fr 2fr auto;align-items:center;gap:12px;padding:7px 16px;border-top:1px solid var(--border2)}
+.frow:first-child{border-top:none}
+.frow:hover{background:var(--hover);cursor:pointer}
+.frow .fn a{color:var(--fg);font-size:14px}
+.frow .fn a:hover{color:var(--blue)}
+.frow .fm{color:var(--fg2);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.frow .fa{color:var(--fg2);font-size:12px;white-space:nowrap;text-align:right}
+.ficon-d{color:#54aeff;font-size:15px}
+.ficon-f{color:var(--fg2);font-size:14px}
+.ficon-m{color:var(--purple);font-size:14px}
+.ficon-i{color:#e3af6f;font-size:14px}
+.ficon-s{color:var(--green);font-size:14px}
+
+/* ── UPLOAD ── */
+.uzone{border:2px dashed var(--border);border-radius:6px;padding:28px;text-align:center;cursor:pointer;margin-bottom:16px;transition:border-color .15s,background .15s}
+.uzone:hover,.uzone.drag{border-color:var(--blue);background:rgba(88,166,255,.05)}
+.uzone i{font-size:28px;color:var(--fg2);margin-bottom:8px;display:block}
+
+/* ── README ── */
+.rdme{border:1px solid var(--border);border-radius:6px;margin-bottom:16px;overflow:hidden}
+.rdme-hd{background:var(--bg2);border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;justify-content:space-between}
+.rdme-hd-t{font-weight:600;display:flex;align-items:center;gap:8px;color:var(--fg2)}
+.rdme-body{padding:24px 32px;line-height:1.6}
+.rdme-body h1{font-size:2em;border-bottom:1px solid var(--border2);padding-bottom:.3em;margin-bottom:16px}
+.rdme-body h2{font-size:1.5em;border-bottom:1px solid var(--border2);padding-bottom:.3em;margin:24px 0 16px}
+.rdme-body h3{font-size:1.25em;margin:20px 0 12px}
+.rdme-body p{margin-bottom:16px}
+.rdme-body ul,.rdme-body ol{padding-left:24px;margin-bottom:16px}
+.rdme-body li{margin-bottom:4px}
+.rdme-body code{font-family:var(--mono);font-size:85%;background:rgba(110,118,129,.2);border-radius:6px;padding:.2em .4em}
+.rdme-body pre{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:16px;margin-bottom:16px;overflow-x:auto}
+.rdme-body pre code{background:none;padding:0}
+.rdme-body a{color:var(--blue)}
+.rdme-body blockquote{border-left:4px solid var(--border);padding-left:16px;color:var(--fg2);margin-bottom:16px}
+.rdme-body table{border-collapse:collapse;width:100%;margin-bottom:16px}
+.rdme-body th,.rdme-body td{border:1px solid var(--border);padding:6px 12px}
+.rdme-body th{background:var(--bg2)}
+.rdme-body img{max-width:100%;border-radius:6px}
+
+/* ── ABOUT BOX ── */
+.about{border:1px solid var(--border);border-radius:6px;padding:16px;margin-bottom:16px}
+.about h3{font-size:14px;font-weight:600;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+.topic-tag{background:rgba(56,139,253,.15);color:var(--blue);border-radius:20px;padding:2px 10px;font-size:12px;font-weight:500;display:inline-block;margin:2px}
+.astat{display:flex;align-items:center;gap:8px;font-size:14px;margin-bottom:8px}
+.astat i{color:var(--fg2);width:16px;text-align:center}
+.lang-bar{height:8px;border-radius:6px;overflow:hidden;display:flex;gap:2px;margin-bottom:8px}
+.lang-leg{display:flex;flex-wrap:wrap;gap:12px}
+.lang-item{display:flex;align-items:center;gap:6px;font-size:12px}
+.lang-circle{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+
+/* ── FILE VIEWER ── */
+.fview{border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:16px}
+.fview-hd{background:var(--bg2);border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.fview-meta{display:flex;align-items:center;gap:12px;color:var(--fg2);font-size:12px}
+.fview-actions{display:flex;gap:4px}
+.fview-body{overflow-x:auto}
+.fview-body pre{padding:16px;margin:0;background:var(--bg);color:var(--fg);font-family:var(--mono);font-size:13px;line-height:1.6;white-space:pre;border:none}
+.lnum-wrap{display:grid;grid-template-columns:auto 1fr}
+.lnums{padding:16px 8px;background:var(--bg);color:var(--fg3);font-family:var(--mono);font-size:13px;line-height:1.6;text-align:right;border-right:1px solid var(--border);user-select:none;min-width:44px}
+
+/* ── EDITOR ── */
+.editor-wrap{max-width:1280px;margin:0 auto;padding:24px 16px}
+.editor-hd{margin-bottom:16px}
+.bcrumb{display:flex;align-items:center;gap:4px;font-size:14px;flex-wrap:wrap;margin-bottom:8px}
+.bcrumb span{color:var(--fg2)}
+.fname-input{background:var(--bg2);border:1px solid var(--border);border-radius:6px;color:var(--fg);font-size:14px;padding:5px 10px;outline:none;width:240px}
+.fname-input:focus{border-color:var(--blue-e);box-shadow:0 0 0 3px rgba(31,111,235,.3)}
+.editor-pane{border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:16px}
+.editor-bar{background:var(--bg2);border-bottom:1px solid var(--border);padding:8px 16px;display:flex;gap:8px;align-items:center;font-size:12px;color:var(--fg2)}
+.editor-area{font-family:var(--mono);font-size:13px;padding:16px;background:var(--bg);color:var(--fg);border:none;outline:none;width:100%;min-height:400px;resize:vertical;line-height:1.6;tab-size:2}
+.commit-pane{border:1px solid var(--border);border-radius:6px;padding:16px;margin-bottom:16px;background:var(--bg2)}
+.commit-pane h3{font-size:14px;font-weight:600;margin-bottom:12px;color:var(--fg)}
+
+/* ── COMMITS PAGE ── */
+.commits-wrap{max-width:1280px;margin:0 auto;padding:24px 16px}
+.commit-item{padding:14px 16px;border:1px solid var(--border);border-radius:6px;margin-bottom:8px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.commit-item:hover{background:var(--bg2)}
+.citem-msg{font-weight:600;font-size:14px;margin-bottom:4px}
+.citem-meta{color:var(--fg2);font-size:12px;display:flex;align-items:center;gap:8px}
+
+/* ── EMPTY / PLACEHOLDER ── */
+.empty{text-align:center;padding:48px 24px}
+.empty i{font-size:40px;color:var(--fg3);margin-bottom:12px;display:block}
+.empty h3{font-size:18px;margin-bottom:6px}
+.empty p{color:var(--fg2);margin-bottom:16px}
+.init-box{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:20px;margin-bottom:16px}
+.init-box h3{font-size:14px;font-weight:600;margin-bottom:10px}
+.init-box pre{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:12px;font-family:var(--mono);font-size:12px;color:var(--fg2);overflow-x:auto}
+
+/* ── PROFILE ── */
+.profile-wrap{display:grid;grid-template-columns:296px 1fr;gap:24px;max-width:1280px;margin:0 auto;padding:24px 16px}
+.profile-pic{margin-bottom:12px}
+.profile-name{font-size:24px;font-weight:600;margin-bottom:2px}
+.profile-login{font-size:18px;color:var(--fg2);margin-bottom:12px}
+.profile-bio{margin-bottom:12px}
+.profile-meta{color:var(--fg2);font-size:14px;margin-bottom:4px;display:flex;align-items:center;gap:6px}
+.profile-meta i{width:16px;color:var(--fg3)}
+.follow-counts{display:flex;gap:16px;font-size:14px;margin-bottom:16px}
+.follow-counts a{color:var(--fg)}
+.follow-counts strong{color:var(--fg)}
+
+/* ── TOAST ── */
+.toasts{position:fixed;bottom:20px;right:20px;z-index:1000;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:14px;color:var(--fg);display:flex;align-items:center;gap:8px;box-shadow:0 4px 12px rgba(0,0,0,.4);animation:tIn .2s ease;max-width:320px;pointer-events:auto}
+.toast.ok{border-left:3px solid var(--green)}
+.toast.er{border-left:3px solid var(--red)}
+.toast.inf{border-left:3px solid var(--blue)}
+@keyframes tIn{from{transform:translateX(110%);opacity:0}to{transform:translateX(0);opacity:1}}
+
+/* ── ALERTS ── */
+.alert{padding:12px 16px;border-radius:6px;margin-bottom:16px;font-size:14px;display:flex;align-items:flex-start;gap:8px}
+.alert-blue{background:rgba(56,139,253,.08);border:1px solid rgba(56,139,253,.3);color:var(--blue)}
+.alert-yellow{background:rgba(210,153,34,.08);border:1px solid rgba(210,153,34,.3);color:var(--yellow)}
+
+/* ── CLONE PANEL ── */
+.clone-panel{position:fixed;z-index:200;background:var(--bg2);border:1px solid var(--border);border-radius:12px;width:340px;box-shadow:0 8px 24px rgba(0,0,0,.5);display:none}
+.clone-panel.open{display:block}
+.clone-tabs{display:flex;border-bottom:1px solid var(--border);padding:0 8px}
+.clone-tab{padding:8px 12px;font-size:13px;font-weight:600;cursor:pointer;color:var(--fg2);border-bottom:2px solid transparent}
+.clone-tab.on{color:var(--fg);border-bottom-color:#f78166}
+.clone-body{padding:12px 16px 16px}
+.clone-body label{font-size:12px;color:var(--fg2);margin-bottom:4px;display:block}
+.clone-row{display:flex;gap:4px}
+.clone-url{flex:1;font-family:var(--mono);font-size:12px;padding:5px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--fg)}
+.clone-copy{background:var(--bg3);border:1px solid rgba(240,246,252,.1);border-radius:6px;padding:5px 10px;color:var(--fg2);font-size:12px}
+.clone-copy:hover{background:#2d333b;color:var(--fg)}
+
+/* ── RESPONSIVE ── */
+@media(max-width:1011px){
+  .repo-wrap{grid-template-columns:1fr}
+  .repo-wrap aside{display:none}
+  .dash-wrap{grid-template-columns:1fr}
+  .dash-side{display:none}
+  .profile-wrap{grid-template-columns:1fr}
+}
+@media(max-width:768px){
+  .hdr-nav,.hdr-search{display:none}
+  .frow{grid-template-columns:20px 1fr auto}
+  .frow .fm{display:none}
+  .frow-msgs,.frow-age{display:none}
+}
+@media(max-width:480px){
+  .frow{grid-template-columns:20px 1fr}
+  .frow .fa{display:none}
+  .repo-btns .btn-sm{display:none}
+}
+</style>
+</head>
+<body>
+<div class="toasts" id="toasts"></div>
+<div id="app"></div>
+
+<!-- CLONE PANEL (global) -->
+<div class="clone-panel" id="clonePanel">
+  <div class="clone-tabs">
+    <div class="clone-tab on" data-proto="https">HTTPS</div>
+    <div class="clone-tab" data-proto="ssh">SSH</div>
+    <div class="clone-tab" data-proto="cli">GitHub CLI</div>
+  </div>
+  <div class="clone-body">
+    <label id="cloneLabel">Clone using the web URL</label>
+    <div class="clone-row">
+      <input type="text" class="clone-url" id="cloneUrl" readonly>
+      <button class="clone-copy" id="cloneCopy"><i class="fas fa-clipboard"></i></button>
+    </div>
+    <div style="margin-top:10px;font-size:12px;color:var(--fg2)"><i class="fas fa-desktop" style="margin-right:4px"></i> Open with LocalGit Desktop</div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="ov" id="ovNewRepo">
+  <div class="ov-dialog" style="max-width:620px">
+    <div class="ov-head"><h2>Create a new repository</h2><button class="ov-close" data-ov="ovNewRepo">&times;</button></div>
+    <div class="ov-body">
+      <div class="frow">
+        <div class="fg"><label class="fl">Owner</label><select class="fsel" id="nrOwner"></select></div>
+        <div class="fg"><label class="fl">Repository name <span style="color:var(--red)">*</span></label><input class="fi" id="nrName" placeholder="my-project" autocomplete="off"></div>
+      </div>
+      <div class="fg"><label class="fl">Description <small>(optional)</small></label><input class="fi" id="nrDesc" placeholder="Short description..."></div>
+      <div class="fg">
+        <label class="radio-opt"><input type="radio" name="nrVis" value="public" checked><div class="radio-opt-body"><div><i class="fas fa-book" style="color:var(--fg2)"></i> <strong>Public</strong></div><small>Anyone can see this repository.</small></div></label>
+        <label class="radio-opt"><input type="radio" name="nrVis" value="private"><div class="radio-opt-body"><div><i class="fas fa-lock" style="color:var(--fg2)"></i> <strong>Private</strong></div><small>Only you can see this repository.</small></div></label>
+      </div>
+      <hr style="border-color:var(--border);margin:4px 0 16px">
+      <div class="fg"><label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer"><input type="checkbox" id="nrReadme" style="margin-top:3px"> <div><strong>Initialize with a README</strong><div class="fhint">Adds a README.md file to help describe your project.</div></div></label></div>
+      <div class="frow">
+        <div class="fg"><label class="fl">.gitignore template</label><select class="fsel" id="nrGitignore"><option value="">None</option><option>Node</option><option>Python</option><option>Java</option><option>Go</option><option>Rust</option></select></div>
+        <div class="fg"><label class="fl">License</label><select class="fsel" id="nrLicense"><option value="">None</option><option>MIT License</option><option>Apache 2.0</option><option>GPL v3</option><option>BSD 3-Clause</option></select></div>
+      </div>
+      <div id="nrErr" class="ferr" style="display:none"></div>
+    </div>
+    <div class="ov-foot"><button class="btn" data-ov="ovNewRepo">Cancel</button><button class="btn btn-green" id="btnCreateRepo">Create repository</button></div>
+  </div>
+</div>
+
+<div class="ov" id="ovDelRepo">
+  <div class="ov-dialog" style="max-width:440px">
+    <div class="ov-head"><h2 style="color:var(--red)"><i class="fas fa-triangle-exclamation"></i> Delete repository</h2><button class="ov-close" data-ov="ovDelRepo">&times;</button></div>
+    <div class="ov-body">
+      <p style="margin-bottom:16px;color:var(--fg2)">This action <strong style="color:var(--fg)">cannot be undone</strong>. This will permanently delete the repository and all its files.</p>
+      <div class="fg"><label class="fl">Type the repository name to confirm</label><input class="fi" id="delRepoConfirm" placeholder=""></div>
+    </div>
+    <div class="ov-foot"><button class="btn" data-ov="ovDelRepo">Cancel</button><button class="btn btn-danger" id="btnDelRepoConfirm">I understand, delete this repository</button></div>
+  </div>
+</div>
+
+<div class="ov" id="ovDelFile">
+  <div class="ov-dialog" style="max-width:440px">
+    <div class="ov-head"><h2>Delete file</h2><button class="ov-close" data-ov="ovDelFile">&times;</button></div>
+    <div class="ov-body">
+      <p style="margin-bottom:16px;color:var(--fg2)">Are you sure you want to delete <strong id="delFileName" style="color:var(--fg)"></strong>?</p>
+      <div class="fg"><label class="fl">Commit message</label><input class="fi" id="delFileMsg" value="Delete file"></div>
+    </div>
+    <div class="ov-foot"><button class="btn" data-ov="ovDelFile">Cancel</button><button class="btn btn-danger" id="btnDelFileConfirm">Delete this file</button></div>
+  </div>
+</div>
+
+<div class="ov" id="ovBranch">
+  <div class="ov-dialog" style="max-width:340px">
+    <div class="ov-head"><h2>Switch branches</h2><button class="ov-close" data-ov="ovBranch">&times;</button></div>
+    <div class="ov-body">
+      <div class="alert alert-yellow"><i class="fas fa-info-circle"></i> This is a local demo — only the <strong>main</strong> branch is supported.</div>
+      <div style="padding:10px 0;font-weight:600;display:flex;align-items:center;gap:8px"><i class="fas fa-check" style="color:var(--green)"></i> main <span style="color:var(--fg2);font-size:12px;font-weight:400">default</span></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+<script>
+'use strict';
+// ═══════════════════════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════════════════════
+const esc = s => String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const randHash = () => (Math.random().toString(16).slice(2,9));
+const timeAgo = ts => {
+  const s = (Date.now()-ts)/1000;
+  if(s<60)return'just now';
+  if(s<3600)return Math.floor(s/60)+' minutes ago';
+  if(s<86400)return Math.floor(s/3600)+' hours ago';
+  if(s<604800)return Math.floor(s/86400)+' days ago';
+  if(s<2592000)return Math.floor(s/604800)+' weeks ago';
+  return new Date(ts).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+};
+const fileExt = n => n.includes('.')?n.split('.').pop().toLowerCase():'';
+const isText = n => ['txt','md','markdown','js','jsx','ts','tsx','html','htm','css','scss','sass','less','json','xml','yaml','yml','toml','ini','cfg','conf','sh','bash','zsh','fish','py','rb','go','rs','c','cpp','cc','h','hpp','java','kt','swift','php','sql','csv','log','env','lock','dockerfile','makefile','gitignore','gitattributes','editorconfig','prettierrc','eslintrc','babelrc'].includes(fileExt(n)) || !n.includes('.') || n.startsWith('.');
+const isImage = n => ['png','jpg','jpeg','gif','svg','webp','ico','bmp','avif'].includes(fileExt(n));
+const fmtBytes = b => b<1024?b+' B':b<1048576?(b/1024).toFixed(1)+' KB':(b/1048576).toFixed(1)+' MB';
+const hashColor = s => {const c=['#e34c26','#563d7c','#f1e05a','#3572A5','#b07219','#2b7489','#89e051','#f34b7d','#cc6699'];let h=0;for(const x of s)h=(h*31+x.charCodeAt(0))%c.length;return c[h];};
+const langOf = name => {
+  const m={js:'JavaScript',jsx:'JavaScript',ts:'TypeScript',tsx:'TypeScript',html:'HTML',htm:'HTML',css:'CSS',scss:'CSS',sass:'CSS',less:'CSS',py:'Python',rb:'Ruby',go:'Go',rs:'Rust',java:'Java',c:'C',cpp:'C++',h:'C',hpp:'C++',php:'PHP',swift:'Swift',kt:'Kotlin',md:'Markdown',sh:'Shell',bash:'Shell',json:'JSON',yml:'YAML',yaml:'YAML',sql:'SQL',vue:'Vue',svelte:'Svelte'};
+  return m[fileExt(name)]||'';
+};
+function toast(msg,type='inf',ms=3000){
+  const icons={ok:'fa-check-circle',er:'fa-exclamation-circle',inf:'fa-info-circle'};
+  const cols={ok:'var(--green)',er:'var(--red)',inf:'var(--blue)'};
+  const t=document.createElement('div');
+  t.className=`toast ${type}`;
+  t.innerHTML=`<i class="fas ${icons[type]||icons.inf}" style="color:${cols[type]||cols.inf}"></i>${esc(msg)}`;
+  document.getElementById('toasts').appendChild(t);
+  setTimeout(()=>{t.style.transition='opacity .3s';t.style.opacity='0';setTimeout(()=>t.remove(),300);},ms);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// DB — localStorage
+// ═══════════════════════════════════════════════════════════════════
+const DB = {
+  _g(k,d=null){try{const v=localStorage.getItem(k);return v!==null?JSON.parse(v):d;}catch{return d;}},
+  _s(k,v){localStorage.setItem(k,JSON.stringify(v));},
+  users(){return this._g('lg:users',{});},
+  repos(){return this._g('lg:repos',{});},
+  current(){return localStorage.getItem('lg:cur')||null;},
+  saveUsers(u){this._s('lg:users',u);},
+  saveRepos(r){this._s('lg:repos',r);},
+  setCurrent(u){u?localStorage.setItem('lg:cur',u):localStorage.removeItem('lg:cur');},
+  stars(){return this._g('lg:stars',{});},
+  saveStars(s){this._s('lg:stars',s);},
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// AUTH
+// ═══════════════════════════════════════════════════════════════════
+const Auth = {
+  current(){return DB.current();},
+  user(name){const u=DB.users();return u[name]||null;},
+  register(username,email,password){
+    if(!username||!email||!password)return'All fields are required.';
+    if(!/^[a-zA-Z0-9_-]{3,30}$/.test(username))return'Username must be 3-30 chars (letters, numbers, _ -)';
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return'Invalid email address.';
+    if(password.length<6)return'Password must be at least 6 characters.';
+    const users=DB.users();
+    if(users[username])return'Username already taken.';
+    users[username]={email,password,bio:'',location:'',website:'',createdAt:Date.now()};
+    DB.saveUsers(users);
+    DB.setCurrent(username);
+    return null;
+  },
+  login(username,password){
+    const users=DB.users();
+    if(!users[username])return'Account not found.';
+    if(users[username].password!==password)return'Incorrect password.';
+    DB.setCurrent(username);
+    return null;
+  },
+  logout(){DB.setCurrent(null);},
+  updateProfile(username,{bio,location,website}){
+    const users=DB.users();
+    if(!users[username])return;
+    users[username]={...users[username],bio,location,website};
+    DB.saveUsers(users);
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// REPO OPS
+// ═══════════════════════════════════════════════════════════════════
+const Repo = {
+  key(owner,name){return`${owner}/${name}`;},
+  get(owner,name){const r=DB.repos();return r[this.key(owner,name)]||null;},
+  list(owner){const r=DB.repos();return Object.values(r).filter(x=>x.owner===owner);},
+  listAll(){return Object.values(DB.repos());},
+
+  create(owner,name,desc,visibility,{initReadme,gitignore,license}){
+    const repos=DB.repos();
+    const key=this.key(owner,name);
+    if(repos[key])return'Repository already exists.';
+    const now=Date.now();
+    const files={};
+    const commits=[];
+    const initFiles=[];
+
+    if(initReadme){
+      const content=`# ${name}\n\n${desc||'A new project.'}\n\n## Getting Started\n\nClone the repository:\n\`\`\`bash\ngit clone https://localgit.example.com/${owner}/${name}.git\n\`\`\`\n`;
+      files['README.md']={content,type:'text',size:content.length,commitMsg:'Initial commit',updatedAt:now};
+      initFiles.push('README.md');
+    }
+    if(gitignore){
+      const gins={Node:'node_modules/\ndist/\n.env\n.DS_Store\n*.log\n',Python:'__pycache__/\n*.pyc\n.env\nvenv/\n.DS_Store\n*.egg-info/\n',Java:'.class\ntarget/\n.idea/\n*.jar\n',Go:'*.exe\n*.out\nvendor/\n',Rust:'target/\nCargo.lock\n'};
+      const content=gins[gitignore]||'# gitignore\n';
+      files['.gitignore']={content,type:'text',size:content.length,commitMsg:'Initial commit',updatedAt:now};
+      initFiles.push('.gitignore');
+    }
+    if(license){
+      const lics={'MIT License':`MIT License\n\nCopyright (c) ${new Date().getFullYear()} ${owner}\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software...\n`,'Apache 2.0':'Apache License, Version 2.0...\n','GPL v3':'GNU GENERAL PUBLIC LICENSE\nVersion 3...\n','BSD 3-Clause':'BSD 3-Clause License\n...\n'};
+      const content=lics[license]||`${license}\n`;
+      files['LICENSE']={content,type:'text',size:content.length,commitMsg:'Initial commit',updatedAt:now};
+      initFiles.push('LICENSE');
+    }
+    if(initFiles.length){
+      commits.push({hash:randHash(),message:'Initial commit',author:owner,date:now,files:initFiles});
+    }
+
+    repos[key]={owner,name,desc,visibility,stars:0,watchers:0,forks:0,createdAt:now,files,commits};
+    DB.saveRepos(repos);
+    return null;
+  },
+
+  delete(owner,name){
+    const repos=DB.repos();
+    delete repos[this.key(owner,name)];
+    DB.saveRepos(repos);
+  },
+
+  fork(owner,name,newOwner){
+    const repos=DB.repos();
+    const src=repos[this.key(owner,name)];
+    if(!src)return'Source repository not found.';
+    const newName=`${name}`;
+    let finalName=newName;
+    let i=1;
+    while(repos[this.key(newOwner,finalName)]){finalName=`${newName}-${i++}`;}
+    repos[this.key(newOwner,finalName)]={
+      ...JSON.parse(JSON.stringify(src)),
+      owner:newOwner,name:finalName,stars:0,forks:0,watchers:0,
+      createdAt:Date.now(),forkedFrom:`${owner}/${name}`,
+    };
+    src.forks=(src.forks||0)+1;
+    DB.saveRepos(repos);
+    return finalName;
+  },
+
+  toggleStar(repoKey,username){
+    const stars=DB.stars();
+    if(!stars[username])stars[username]=[];
+    const idx=stars[username].indexOf(repoKey);
+    const repos=DB.repos();
+    if(idx>=0){stars[username].splice(idx,1);if(repos[repoKey])repos[repoKey].stars=Math.max(0,(repos[repoKey].stars||0)-1);}
+    else{stars[username].push(repoKey);if(repos[repoKey])repos[repoKey].stars=(repos[repoKey].stars||0)+1;}
+    DB.saveStars(stars);DB.saveRepos(repos);
+    return idx<0;
+  },
+  isStarred(repoKey,username){const s=DB.stars();return !!(s[username]&&s[username].includes(repoKey));},
+
+  // Files
+  saveFile(owner,name,path,content,commitMsg,type='text'){
+    const repos=DB.repos();
+    const key=this.key(owner,name);
+    if(!repos[key])return;
+    const r=repos[key];
+    const now=Date.now();
+    const size=typeof content==='string'?new TextEncoder().encode(content).length:content.length;
+    r.files[path]={content,type,size,commitMsg:commitMsg||'Update '+path,updatedAt:now};
+    r.commits.push({hash:randHash(),message:commitMsg||'Update '+path,author:owner,date:now,files:[path]});
+    DB.saveRepos(repos);
+  },
+
+  deleteFile(owner,name,path,commitMsg){
+    const repos=DB.repos();
+    const key=this.key(owner,name);
+    if(!repos[key])return;
+    const r=repos[key];
+    const now=Date.now();
+    delete r.files[path];
+    r.commits.push({hash:randHash(),message:commitMsg||'Delete '+path,author:owner,date:now,files:[path]});
+    DB.saveRepos(repos);
+  },
+
+  // Get files in a directory (non-recursive listing)
+  getDirContents(owner,name,dirPath){
+    const r=this.get(owner,name);
+    if(!r)return[];
+    const prefix=dirPath?dirPath+'/':'';
+    const seen=new Set();
+    const result=[];
+    for(const [filePath,file] of Object.entries(r.files)){
+      if(prefix&&!filePath.startsWith(prefix))continue;
+      const rel=filePath.slice(prefix.length);
+      if(!rel)continue;
+      const slashIdx=rel.indexOf('/');
+      if(slashIdx===-1){
+        result.push({name:rel,path:filePath,type:'file',file});
+      } else {
+        const dirName=rel.slice(0,slashIdx);
+        if(!seen.has(dirName)){
+          seen.add(dirName);
+          // find last commit for this dir
+          const dirPrefix=prefix+dirName+'/';
+          const dirFiles=Object.entries(r.files).filter(([p])=>p.startsWith(dirPrefix));
+          const lastCommit=dirFiles.length?r.commits.filter(c=>c.files.some(f=>f.startsWith(dirPrefix))).sort((a,b)=>b.date-a.date)[0]:null;
+          result.push({name:dirName,path:prefix+dirName,type:'dir',lastCommit});
+        }
+      }
+    }
+    // Sort: dirs first, then files
+    result.sort((a,b)=>{
+      if(a.type!==b.type)return a.type==='dir'?-1:1;
+      return a.name.localeCompare(b.name);
+    });
+    return result;
+  },
+
+  // Language stats
+  getLangStats(owner,name){
+    const r=this.get(owner,name);
+    if(!r)return[];
+    const counts={};
+    for(const [path,file] of Object.entries(r.files)){
+      const lang=langOf(path);
+      if(lang&&file.type==='text')counts[lang]=(counts[lang]||0)+(file.size||0);
+    }
+    const total=Object.values(counts).reduce((a,b)=>a+b,0)||1;
+    return Object.entries(counts).sort((a,b)=>b[1]-a[1]).map(([lang,sz])=>({lang,pct:Math.round(sz/total*100)}));
+  },
+
+  lastCommit(owner,name,path){
+    const r=this.get(owner,name);
+    if(!r||!r.commits.length)return null;
+    if(!path)return r.commits[r.commits.length-1];
+    // Find last commit touching this path
+    const relevant=r.commits.filter(c=>c.files&&c.files.some(f=>f===path||f.startsWith(path+'/')));
+    return relevant.length?relevant[relevant.length-1]:r.commits[r.commits.length-1];
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// MARKDOWN
+// ═══════════════════════════════════════════════════════════════════
+if(typeof marked!=='undefined'){
+  marked.setOptions({gfm:true,breaks:true});
+}
+function renderMd(src){
+  try{return typeof marked!=='undefined'?marked.parse(src):esc(src).replace(/\n/g,'<br>');}
+  catch{return esc(src).replace(/\n/g,'<br>');}
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// ROUTER
+// ═══════════════════════════════════════════════════════════════════
+const State={pendingDelFile:null};
+
+function nav(hash){window.location.hash=hash;}
+function parseRoute(){
+  const h=decodeURIComponent(location.hash.slice(1).replace(/^\//,''))||'';
+  const parts=h.split('/').filter(Boolean);
+  return{raw:h,parts,p:parts[0]||''};
+}
+
+async function render(){
+  const {parts,p}=parseRoute();
+  const me=Auth.current();
+
+  if(!me){renderAuth();return;}
+
+  if(!p||p==='dashboard'){renderDashboard(me);return;}
+  if(p==='profile'){renderProfile(parts[1]||me);return;}
+  if(p==='repo'){
+    const owner=parts[1],name=parts[2],sub=parts[3],rest=parts.slice(4).join('/');
+    if(!owner||!name){nav('#dashboard');return;}
+    if(sub==='blob'){renderFileView(owner,name,rest);return;}
+    if(sub==='edit'){renderFileEditor(owner,name,rest,false);return;}
+    if(sub==='new'){renderFileEditor(owner,name,rest,true);return;}
+    if(sub==='commits'){renderCommits(owner,name);return;}
+    const dir=sub==='tree'?rest:'';
+    renderRepo(owner,name,dir);
+    return;
+  }
+  renderDashboard(me);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// VIEWS — HTML helpers
+// ═══════════════════════════════════════════════════════════════════
+function githubSvg(){
+  return`<svg height="32" viewBox="0 0 16 16" width="32" xmlns="http://www.w3.org/2000/svg"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>`;
+}
+function avatarHtml(username,cls='av32'){
+  const ch=(username||'?')[0].toUpperCase();
+  const colors=['#6e40c9','#1f6feb','#238636','#9a6700','#cf222e','#0969da'];
+  let h=0;for(const c of(username||''))h=(h*31+c.charCodeAt(0))%colors.length;
+  return`<div class="avatar ${cls}" style="background:${colors[h]}">${ch}</div>`;
+}
+function header(me){
+  return`<header class="hdr">
+  <a href="#dashboard" class="hdr-logo">${githubSvg()}</a>
+  <div class="hdr-search"><i class="fas fa-search hdr-search-icon"></i><input type="text" id="globalSearch" placeholder="Search or jump to..." autocomplete="off"></div>
+  <nav class="hdr-nav">
+    <a href="#dashboard">Dashboard</a>
+    <a href="#" onclick="openOv('ovNewRepo');return false;">New</a>
+  </nav>
+  <div class="hdr-right">
+    <button class="hdr-btn" title="Notifications" style="position:relative"><i class="fas fa-bell"></i></button>
+    <button class="hdr-btn" id="hdrAvatar" onclick="nav('#profile/${esc(me)}')" title="Your profile">
+      ${avatarHtml(me,'av20')}
+      <span style="font-weight:600">${esc(me)}</span>
+      <i class="fas fa-caret-down" style="font-size:10px;color:var(--fg2)"></i>
+    </button>
+    <button class="hdr-btn" onclick="Auth.logout();nav('#auth');render();" title="Sign out"><i class="fas fa-sign-out-alt"></i></button>
+  </div>
+</header>`;
+}
+
+// ─── AUTH VIEW ───────────────────────────────────────────────────
+function renderAuth(){
+  document.getElementById('app').innerHTML=`
+  <div class="auth-page">
+    <div class="auth-box">
+      <div class="auth-logo">${githubSvg()}</div>
+      <div class="auth-card">
+        <div class="auth-tabs">
+          <div class="auth-tab on" id="tabLogin" onclick="switchAuthTab('login')">Sign in</div>
+          <div class="auth-tab" id="tabRegister" onclick="switchAuthTab('register')">Create account</div>
+        </div>
+        <div id="loginForm">
+          <div class="fg"><label class="fl">Username</label><input class="fi" id="liUser" placeholder="your-username" autocomplete="username"></div>
+          <div class="fg"><label class="fl">Password</label><input class="fi" type="password" id="liPass" placeholder="••••••••" autocomplete="current-password"></div>
+          <div id="liErr" class="ferr" style="display:none"></div>
+          <button class="btn btn-green auth-submit" onclick="doLogin()">Sign in</button>
+        </div>
+        <div id="registerForm" style="display:none">
+          <div class="fg"><label class="fl">Username</label><input class="fi" id="regUser" placeholder="your-username" autocomplete="username"><div class="fhint">Letters, numbers, hyphens and underscores only.</div></div>
+          <div class="fg"><label class="fl">Email</label><input class="fi" type="email" id="regEmail" placeholder="you@example.com" autocomplete="email"></div>
+          <div class="fg"><label class="fl">Password</label><input class="fi" type="password" id="regPass" placeholder="Min. 6 characters" autocomplete="new-password"></div>
+          <div id="regErr" class="ferr" style="display:none"></div>
+          <button class="btn btn-green auth-submit" onclick="doRegister()">Create account</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+  // Enter key
+  document.getElementById('liPass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+  document.getElementById('regPass').addEventListener('keydown',e=>{if(e.key==='Enter')doRegister();});
+}
+function switchAuthTab(tab){
+  document.getElementById('loginForm').style.display=tab==='login'?'':'none';
+  document.getElementById('registerForm').style.display=tab==='register'?'':'none';
+  document.getElementById('tabLogin').className='auth-tab'+(tab==='login'?' on':'');
+  document.getElementById('tabRegister').className='auth-tab'+(tab==='register'?' on':'');
+}
+function doLogin(){
+  const u=document.getElementById('liUser').value.trim();
+  const p=document.getElementById('liPass').value;
+  const err=Auth.login(u,p);
+  if(err){const el=document.getElementById('liErr');el.textContent=err;el.style.display='';}
+  else{nav('#dashboard');render();}
+}
+function doRegister(){
+  const u=document.getElementById('regUser').value.trim();
+  const e=document.getElementById('regEmail').value.trim();
+  const p=document.getElementById('regPass').value;
+  const err=Auth.register(u,e,p);
+  if(err){const el=document.getElementById('regErr');el.textContent=err;el.style.display='';}
+  else{toast('Welcome to LocalGit, '+u+'!','ok');nav('#dashboard');render();}
+}
+
+// ─── DASHBOARD ──────────────────────────────────────────────────
+function renderDashboard(me){
+  const myRepos=Repo.list(me).sort((a,b)=>b.createdAt-a.createdAt);
+  const stars=DB.stars()[me]||[];
+  const user=Auth.user(me)||{};
+
+  document.getElementById('app').innerHTML=`
+  ${header(me)}
+  <div class="dash-wrap">
+    <aside class="dash-side">
+      <div class="user-pane">
+        ${avatarHtml(me,'av64')}
+        <div class="user-name-big">${esc(me)}</div>
+        <div class="user-login">${esc(user.email||'')}</div>
+        ${user.bio?`<div style="font-size:14px;margin-bottom:8px">${esc(user.bio)}</div>`:''}
+        ${user.location?`<div class="stat-line"><i class="fas fa-map-marker-alt"></i>${esc(user.location)}</div>`:''}
+        ${user.website?`<div class="stat-line"><i class="fas fa-link"></i><a href="${esc(user.website)}" target="_blank">${esc(user.website)}</a></div>`:''}
+        <div class="stat-line"><i class="fas fa-calendar-alt"></i>Joined ${new Date(user.createdAt||Date.now()).toLocaleDateString('en-US',{month:'long',year:'numeric'})}</div>
+        <a href="#profile/${esc(me)}" class="btn btn-sm" style="margin-top:10px;width:100%;justify-content:center"><i class="fas fa-user-edit"></i> Edit profile</a>
+      </div>
+      <div class="sec-title">Repositories <span style="color:var(--blue);font-weight:400;font-size:12px;cursor:pointer" onclick="openOv('ovNewRepo')">New</span></div>
+      <div id="dashSideRepos">
+        ${myRepos.slice(0,8).map(r=>`<div class="repo-side-item">
+          <i class="fas fa-book" style="color:var(--fg2);font-size:12px;flex-shrink:0"></i>
+          <a href="#repo/${esc(r.owner)}/${esc(r.name)}" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;font-weight:600;color:var(--fg)">${esc(r.name)}</a>
+          <span class="vis-badge">${r.visibility==='private'?'Private':'Public'}</span>
+        </div>`).join('')}
+        ${myRepos.length>8?`<div style="margin-top:6px;font-size:12px"><a href="#profile/${esc(me)}" style="color:var(--blue)">View all repositories</a></div>`:''}
+      </div>
+    </aside>
+    <main class="dash-main">
+      <div class="repos-bar">
+        <input class="fi repos-search" id="repoFilter" placeholder="Find a repository..." style="flex:1;max-width:300px">
+        <button class="btn btn-green btn-sm" onclick="openOv('ovNewRepo')"><i class="fas fa-plus"></i> New</button>
+        <select class="fsel btn-sm" style="width:auto;background:var(--bg2)" id="sortRepos">
+          <option value="updated">Last updated</option>
+          <option value="name">Name</option>
+          <option value="stars">Stars</option>
+        </select>
+      </div>
+      <div id="repoList">${renderRepoCards(myRepos,me)}</div>
+      ${myRepos.length===0?`<div class="empty"><i class="fas fa-book-open"></i><h3>Welcome to LocalGit!</h3><p>You don't have any repositories yet. Create your first one.</p><button class="btn btn-green" onclick="openOv('ovNewRepo')"><i class="fas fa-plus"></i> Create repository</button></div>`:''}
+    </main>
+  </div>`;
+
+  // Filter
+  document.getElementById('repoFilter').addEventListener('input',function(){
+    const q=this.value.toLowerCase();
+    const filtered=myRepos.filter(r=>r.name.toLowerCase().includes(q)||(r.desc||'').toLowerCase().includes(q));
+    document.getElementById('repoList').innerHTML=renderRepoCards(filtered,me);
+  });
+  document.getElementById('sortRepos').addEventListener('change',function(){
+    const v=this.value;
+    const sorted=[...myRepos].sort((a,b)=>v==='name'?a.name.localeCompare(b.name):v==='stars'?b.stars-a.stars:b.createdAt-a.createdAt);
+    document.getElementById('repoList').innerHTML=renderRepoCards(sorted,me);
+  });
+  setupNewRepoModal(me);
+  setupSearch();
+}
+function renderRepoCards(repos,me){
+  if(!repos.length)return'<div style="padding:16px;color:var(--fg2);font-size:14px">No repositories match this filter.</div>';
+  const stars=DB.stars()[me]||[];
+  return repos.map(r=>{
+    const langs=Repo.getLangStats(r.owner,r.name);
+    const starred=stars.includes(`${r.owner}/${r.name}`);
+    return`<div class="repo-card">
+      <div class="repo-card-top">
+        <div>
+          <a href="#repo/${esc(r.owner)}/${esc(r.name)}" class="repo-card-name">${esc(r.owner)}/${esc(r.name)}</a>
+          <span class="vis-badge" style="margin-left:8px">${r.visibility==='private'?'Private':'Public'}</span>
+          ${r.forkedFrom?`<span style="font-size:12px;color:var(--fg2);margin-left:6px"><i class="fas fa-code-fork"></i> forked from ${esc(r.forkedFrom)}</span>`:''}
+        </div>
+        <button class="btn btn-sm" onclick="toggleStar('${esc(r.owner+'/'+r.name)}',event)">
+          <i class="fa${starred?'s':'r'} fa-star" style="color:${starred?'var(--yellow)':'var(--fg2)'}"></i>
+          <span id="sc-${esc(r.owner)}-${esc(r.name)}">${r.stars||0}</span>
+        </button>
+      </div>
+      ${r.desc?`<div class="repo-card-desc">${esc(r.desc)}</div>`:''}
+      <div class="repo-card-meta">
+        ${langs.length?`<span><span class="lang-dot" style="background:${hashColor(langs[0].lang)}"></span>${esc(langs[0].lang)}</span>`:''}
+        <span><i class="fas fa-star" style="margin-right:4px;color:var(--fg3)"></i>${r.stars||0}</span>
+        <span><i class="fas fa-code-fork" style="margin-right:4px;color:var(--fg3)"></i>${r.forks||0}</span>
+        <span>${timeAgo(r.createdAt)}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+function toggleStar(key,e){
+  e.stopPropagation();e.preventDefault();
+  const me=Auth.current();if(!me)return;
+  const wasStarred=Repo.toggleStar(key,me);
+  const [owner,name]=key.split('/');
+  const r=Repo.get(owner,name);
+  document.querySelectorAll(`#sc-${CSS.escape(owner)}-${CSS.escape(name)}`).forEach(el=>el.textContent=r?r.stars||0:0);
+  toast(wasStarred?'Repository starred':'Repository unstarred',wasStarred?'ok':'inf');
+}
+
+// ─── NEW REPO MODAL ─────────────────────────────────────────────
+function setupNewRepoModal(owner){
+  const sel=document.getElementById('nrOwner');
+  if(sel){sel.innerHTML=`<option value="${esc(owner)}">${esc(owner)}</option>`;}
+  document.getElementById('btnCreateRepo').onclick=()=>{
+    const o=document.getElementById('nrOwner').value;
+    const n=document.getElementById('nrName').value.trim();
+    const d=document.getElementById('nrDesc').value.trim();
+    const v=document.querySelector('input[name=nrVis]:checked').value;
+    const readme=document.getElementById('nrReadme').checked;
+    const gi=document.getElementById('nrGitignore').value;
+    const li=document.getElementById('nrLicense').value;
+    const errEl=document.getElementById('nrErr');
+    if(!n){errEl.textContent='Repository name is required.';errEl.style.display='';return;}
+    if(!/^[a-zA-Z0-9._-]+$/.test(n)){errEl.textContent='Invalid repository name.';errEl.style.display='';return;}
+    const err=Repo.create(o,n,d,v,{initReadme:readme,gitignore:gi,license:li});
+    if(err){errEl.textContent=err;errEl.style.display='';return;}
+    closeOv('ovNewRepo');
+    document.getElementById('nrName').value='';document.getElementById('nrDesc').value='';
+    document.getElementById('nrReadme').checked=false;
+    errEl.style.display='none';
+    toast('Repository created!','ok');
+    nav(`#repo/${o}/${n}`);render();
+  };
+}
+
+// ─── REPO VIEW ───────────────────────────────────────────────────
+function renderRepo(owner,name,dir){
+  const me=Auth.current();
+  const r=Repo.get(owner,name);
+  if(!r){document.getElementById('app').innerHTML=header(me)+`<div class="empty" style="margin-top:40px"><i class="fas fa-exclamation-triangle"></i><h3>Repository not found</h3><p>This repository doesn't exist or you don't have access.</p><a href="#dashboard" class="btn btn-green">Go home</a></div>`;return;}
+  const isOwner=me===owner;
+  const isStarred=Repo.isStarred(`${owner}/${name}`,me);
+  const lastC=Repo.lastCommit(owner,name,dir||null);
+  const contents=Repo.getDirContents(owner,name,dir||'');
+  const readme=r.files['README.md']||r.files['readme.md'];
+  const langs=Repo.getLangStats(owner,name);
+  const totalFiles=Object.keys(r.files).length;
+  const stars=DB.stars();
+  const starredUsers=Object.entries(stars).filter(([u,repos])=>repos.includes(`${owner}/${name}`)).map(([u])=>u);
+  const forkedRepos=Repo.listAll().filter(x=>x.forkedFrom===`${owner}/${name}`);
+
+  // Build path breadcrumb for subdirectory
+  let pathBreadcrumb='';
+  if(dir){
+    const parts=dir.split('/');
+    pathBreadcrumb=` <span style="color:var(--fg2)">/</span> `;
+    let acc='';
+    parts.forEach((p,i)=>{
+      acc=acc?acc+'/'+p:p;
+      const isLast=i===parts.length-1;
+      pathBreadcrumb+=isLast?`<strong>${esc(p)}</strong>`:`<a href="#repo/${esc(owner)}/${esc(name)}/tree/${esc(acc)}" style="font-weight:600">${esc(p)}</a> <span style="color:var(--fg2)">/</span> `;
+    });
+  }
+
+  document.getElementById('app').innerHTML=`
+  ${header(me)}
+  <div class="repo-top">
+    <div class="repo-top-row">
+      <div class="repo-crumb">
+        <i class="fas fa-book" style="color:var(--fg2);font-size:16px"></i>
+        <a href="#profile/${esc(owner)}">${esc(owner)}</a>
+        <span class="sep">/</span>
+        <a href="#repo/${esc(owner)}/${esc(name)}" class="rl">${esc(name)}</a>
+        ${pathBreadcrumb}
+        <span class="vis-badge">${r.visibility==='private'?'Private':'Public'}</span>
+      </div>
+      <div class="repo-btns">
+        <div class="btn-grp">
+          <button class="btn btn-sm" onclick="document.getElementById('clonePanel').style.cssText='';setupClonePanel('${esc(owner)}','${esc(name)}');toggleClone(this)"><i class="fas fa-code" style="color:var(--fg2)"></i> Code <i class="fas fa-caret-down" style="font-size:10px;color:var(--fg2)"></i></button>
+        </div>
+        <div class="btn-grp">
+          <button class="btn btn-sm" id="starBtn" onclick="handleStarRepo('${esc(owner)}','${esc(name)}')">
+            <i class="${isStarred?'fas':'far'} fa-star" style="color:${isStarred?'var(--yellow)':'var(--fg2)'}"></i>
+            <span id="starLabel">${isStarred?'Unstar':'Star'}</span>
+          </button>
+          <button class="btn btn-sm"><span id="starCount">${r.stars||0}</span></button>
+        </div>
+        <div class="btn-grp">
+          <button class="btn btn-sm" onclick="handleFork('${esc(owner)}','${esc(name)}')"><i class="fas fa-code-fork" style="color:var(--fg2)"></i> Fork</button>
+          <button class="btn btn-sm"><span>${r.forks||0}</span></button>
+        </div>
+        ${isOwner?`<button class="btn btn-sm btn-danger" onclick="openDelRepo('${esc(owner)}','${esc(name)}')"><i class="fas fa-trash"></i> Delete</button>`:''}
+      </div>
+    </div>
+    <nav class="unav">
+      <a href="#repo/${esc(owner)}/${esc(name)}" class="unav-item on"><i class="fas fa-code"></i> Code</a>
+      <a href="#repo/${esc(owner)}/${esc(name)}/commits" class="unav-item"><i class="fas fa-clock-rotate-left"></i> Commits <span class="unav-cnt">${r.commits.length}</span></a>
+      <span class="unav-item"><i class="fas fa-circle-dot"></i> Issues <span class="unav-cnt">0</span></span>
+      <span class="unav-item"><i class="fas fa-code-pull-request"></i> Pull requests <span class="unav-cnt">0</span></span>
+    </nav>
+  </div>
+  <div class="repo-wrap">
+    <main>
+      <!-- desc bar -->
+      ${r.desc?`<div style="margin-bottom:12px;color:var(--fg2);font-size:14px">${esc(r.desc)}</div>`:''}
+      <!-- toolbar -->
+      <div class="ctool">
+        <button class="branch-btn" onclick="openOv('ovBranch')">
+          <i class="fas fa-code-branch" style="color:var(--fg2)"></i>
+          <span>main</span>
+          <i class="fas fa-caret-down" style="font-size:11px;color:var(--fg2);flex-shrink:0"></i>
+        </button>
+        <div class="sp"></div>
+        ${isOwner?`
+        <a href="#repo/${esc(owner)}/${esc(name)}/new/${dir||''}" class="btn btn-sm"><i class="fas fa-plus" style="color:var(--fg2)"></i> New file</a>
+        <button class="btn btn-sm" id="uploadBtn"><i class="fas fa-upload" style="color:var(--fg2)"></i> Upload</button>
+        `:''}
+        <a href="#repo/${esc(owner)}/${esc(name)}/commits" class="btn btn-sm hide-xs">
+          <i class="fas fa-clock-rotate-left" style="color:var(--fg2)"></i>
+          <strong>${r.commits.length}</strong> commits
+        </a>
+      </div>
+
+      ${totalFiles===0?renderEmptyRepo(owner,name):renderFileTable(owner,name,dir||'',contents,lastC)}
+
+      ${isOwner&&totalFiles===0?'':(isOwner?`
+      <div class="uzone" id="uzone">
+        <i class="fas fa-cloud-arrow-up"></i>
+        <p><strong>Drag & drop files here</strong> or <span style="color:var(--blue);cursor:pointer" id="uzonePick">click to browse</span></p>
+        <p style="font-size:12px;margin-top:4px;color:var(--fg3)">Text, images and other files are supported</p>
+        <input type="file" id="fileInput" multiple style="display:none">
+      </div>`:'')}
+
+      ${readme?`
+      <div class="rdme">
+        <div class="rdme-hd">
+          <div class="rdme-hd-t"><i class="fab fa-markdown"></i><span style="color:var(--fg)">README</span><span>.md</span></div>
+          <div style="display:flex;gap:4px">
+            ${isOwner?`<button class="btn-ghost btn-sm" onclick="nav('#repo/${esc(owner)}/${esc(name)}/edit/README.md')"><i class="fas fa-pencil"></i></button>`:''}
+            <button class="btn-ghost btn-sm" onclick="nav('#repo/${esc(owner)}/${esc(name)}/blob/README.md')"><i class="fas fa-code"></i></button>
+          </div>
+        </div>
+        <div class="rdme-body">${renderMd(readme.content)}</div>
+      </div>`:''}
+    </main>
+    <aside>
+      <!-- About -->
+      <div class="about">
+        <h3>About ${isOwner?`<button class="btn-ghost btn-sm" style="font-size:11px" onclick="nav('#profile/${esc(owner)}')"><i class="fas fa-gear"></i></button>`:''}</h3>
+        ${r.desc?`<p style="font-size:14px;margin-bottom:10px">${esc(r.desc)}</p>`:'<p style="font-size:14px;color:var(--fg2);margin-bottom:10px"><em>No description provided.</em></p>'}
+        <div class="astat"><i class="fas fa-star"></i><strong>${r.stars||0}</strong> stars</div>
+        <div class="astat"><i class="fas fa-eye"></i><strong>${r.watchers||0}</strong> watching</div>
+        <div class="astat"><i class="fas fa-code-fork"></i><strong>${r.forks||0}</strong> forks</div>
+        <div class="astat"><i class="fas fa-calendar-alt"></i>Created ${timeAgo(r.createdAt)}</div>
+      </div>
+      <!-- Languages -->
+      ${langs.length?`
+      <div class="about">
+        <h3 style="margin-bottom:12px">Languages</h3>
+        <div class="lang-bar">${langs.map(l=>`<div style="width:${l.pct}%;background:${hashColor(l.lang)};height:100%"></div>`).join('')}</div>
+        <div class="lang-leg">${langs.map(l=>`<div class="lang-item"><div class="lang-circle" style="background:${hashColor(l.lang)}"></div><span>${esc(l.lang)}</span><span style="color:var(--fg2)">${l.pct}%</span></div>`).join('')}</div>
+      </div>`:''}
+      <!-- Contributors -->
+      <div class="about">
+        <h3 style="margin-bottom:10px">Releases</h3>
+        <p style="font-size:13px;color:var(--fg2)"><i class="fas fa-tag" style="margin-right:6px"></i>No releases published</p>
+      </div>
+    </aside>
+  </div>`;
+
+  // Upload zone
+  const uz=document.getElementById('uzone');
+  const fi=document.getElementById('fileInput');
+  if(uz&&fi){
+    document.getElementById('uzonePick')?.addEventListener('click',()=>fi.click());
+    uz.addEventListener('click',e=>{if(e.target===uz||e.target.tagName==='P'||e.target.tagName==='I')fi.click();});
+    uz.addEventListener('dragover',e=>{e.preventDefault();uz.classList.add('drag');});
+    uz.addEventListener('dragleave',()=>uz.classList.remove('drag'));
+    uz.addEventListener('drop',e=>{e.preventDefault();uz.classList.remove('drag');handleFileUpload(owner,name,dir||'',e.dataTransfer.files);});
+    fi.addEventListener('change',function(){handleFileUpload(owner,name,dir||'',this.files);this.value='';});
+  }
+  // Upload btn
+  document.getElementById('uploadBtn')?.addEventListener('click',()=>fi&&fi.click());
+  // Clone panel
+  setupClonePanel(owner,name);
+  document.addEventListener('click',hideCLoneOnOutside,{once:true});
+  // Del repo modal
+  setupDelRepoModal(owner,name);
+  setupSearch();
+}
+
+function renderEmptyRepo(owner,name){
+  return`<div class="init-box">
+    <h3><i class="fas fa-terminal" style="margin-right:8px;color:var(--green)"></i>Quick setup — initialize this repository</h3>
+    <p style="font-size:13px;color:var(--fg2);margin:8px 0">…or create a new repository on the command line</p>
+    <pre>echo "# ${owner}/${name}" >> README.md
+git init
+git add README.md
+git commit -m "first commit"
+git branch -M main
+git remote add origin https://localgit.example.com/${owner}/${name}.git
+git push -u origin main</pre>
+    <p style="font-size:13px;color:var(--fg2);margin:12px 0 8px">…or upload files directly</p>
+  </div>`;
+}
+
+function renderFileTable(owner,name,dir,contents,lastC){
+  if(!contents.length&&!dir)return renderEmptyRepo(owner,name);
+  const me=Auth.current();
+  const isOwner=me===owner;
+  const upRow=dir?`<div class="frow" onclick="nav('#repo/${esc(owner)}/${esc(name)}${dir.includes('/')?'/tree/'+esc(dir.split('/').slice(0,-1).join('/')):''}')">
+    <i class="fas fa-folder ficon-d"></i>
+    <div class="fn"><a href="#">..</a></div>
+    <div class="fm"></div><div class="fa"></div>
+  </div>`:'';
+
+  const rows=contents.map(item=>{
+    if(item.type==='dir'){
+      const lc=Repo.lastCommit(owner,name,item.path+'/');
+      return`<div class="frow" onclick="nav('#repo/${esc(owner)}/${esc(name)}/tree/${esc(item.path)}')">
+        <i class="fas fa-folder ficon-d"></i>
+        <div class="fn"><a href="#repo/${esc(owner)}/${esc(name)}/tree/${esc(item.path)}" onclick="event.stopPropagation()">${esc(item.name)}</a></div>
+        <div class="fm">${lc?esc(lc.message):''}</div>
+        <div class="fa">${lc?timeAgo(lc.date):''}</div>
+      </div>`;
+    }
+    const fc=item.file;
+    const lc=Repo.lastCommit(owner,name,item.path);
+    const icon=isImage(item.name)?'ficon-i':item.name.endsWith('.md')||item.name.endsWith('.txt')?'ficon-m':item.name.endsWith('.sh')||item.name.endsWith('.bash')?'ficon-s':'ficon-f';
+    const iconCls=icon==='ficon-i'?'fa-file-image':icon==='ficon-m'?'fa-file-lines':icon==='ficon-s'?'fa-terminal':'fa-file-code';
+    return`<div class="frow" onclick="nav('#repo/${esc(owner)}/${esc(name)}/blob/${esc(item.path)}')">
+      <i class="fas ${iconCls} ${icon}"></i>
+      <div class="fn"><a href="#repo/${esc(owner)}/${esc(name)}/blob/${esc(item.path)}" onclick="event.stopPropagation()">${esc(item.name)}</a></div>
+      <div class="fm">${lc?esc(lc.message):''}</div>
+      <div class="fa">${lc?timeAgo(lc.date):''}</div>
+    </div>`;
+  }).join('');
+
+  // Last commit bar
+  const lcBar=lastC?`
+  <div class="cbar">
+    ${avatarHtml(lastC.author,'av20')}
+    <a href="#profile/${esc(lastC.author)}" style="color:var(--fg);font-weight:600">${esc(lastC.author)}</a>
+    <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;color:var(--fg)">${esc(lastC.message)}</span>
+    <span class="chash">${esc(lastC.hash)}</span>
+    <span style="color:var(--fg2);font-size:12px;white-space:nowrap">${timeAgo(lastC.date)}</span>
+  </div>`:''
+
+  return lcBar+`<div class="ftbl">${upRow}${rows}</div>`;
+}
+
+// ─── FILE UPLOAD ─────────────────────────────────────────────────
+function handleFileUpload(owner,name,dir,files){
+  if(!files||!files.length)return;
+  let processed=0;
+  const total=files.length;
+  const commitMsgBase=`Upload ${total} file${total>1?'s':''}`;
+  Array.from(files).forEach(file=>{
+    const path=dir?(dir+'/'+file.name).replace(/^\/+/,''):file.name;
+    if(isImage(file.name)){
+      const reader=new FileReader();
+      reader.onload=e=>{
+        Repo.saveFile(owner,name,path,e.target.result,commitMsgBase,'image');
+        processed++;
+        if(processed===total){toast(`Uploaded ${total} file${total>1?'s':''}!`,'ok');nav('#repo/'+owner+'/'+name+(dir?'/tree/'+dir:''));render();}
+      };
+      reader.readAsDataURL(file);
+    } else {
+      const reader=new FileReader();
+      reader.onload=e=>{
+        Repo.saveFile(owner,name,path,e.target.result,commitMsgBase,'text');
+        processed++;
+        if(processed===total){toast(`Uploaded ${total} file${total>1?'s':''}!`,'ok');nav('#repo/'+owner+'/'+name+(dir?'/tree/'+dir:''));render();}
+      };
+      reader.readAsText(file);
+    }
+  });
+}
+
+// ─── CLONE PANEL ─────────────────────────────────────────────────
+function setupClonePanel(owner,name){
+  const base=`https://localgit.example.com/${owner}/${name}.git`;
+  const protos={https:base,ssh:`git@localgit.example.com:${owner}/${name}.git`,cli:`gh repo clone ${owner}/${name}`};
+  const labels={https:'Clone using the web URL',ssh:'Clone using SSH',cli:'GitHub CLI command'};
+  let cur='https';
+  const panel=document.getElementById('clonePanel');
+  const urlEl=document.getElementById('cloneUrl');
+  const labelEl=document.getElementById('cloneLabel');
+  if(urlEl){urlEl.value=base;}
+  document.querySelectorAll('.clone-tab').forEach(tab=>{
+    tab.onclick=()=>{
+      document.querySelectorAll('.clone-tab').forEach(t=>t.classList.remove('on'));
+      tab.classList.add('on');
+      cur=tab.dataset.proto;
+      if(urlEl)urlEl.value=protos[cur]||base;
+      if(labelEl)labelEl.textContent=labels[cur]||labels.https;
+    };
+  });
+  document.getElementById('cloneCopy').onclick=()=>{
+    navigator.clipboard.writeText(urlEl?.value||base).catch(()=>{});
+    const btn=document.getElementById('cloneCopy');
+    btn.innerHTML='<i class="fas fa-check" style="color:var(--green)"></i>';
+    setTimeout(()=>btn.innerHTML='<i class="fas fa-clipboard"></i>',2000);
+    toast('Copied to clipboard','ok');
+  };
+}
+function toggleClone(btn){
+  const p=document.getElementById('clonePanel');
+  const r=btn.getBoundingClientRect();
+  if(p.classList.contains('open')){p.classList.remove('open');return;}
+  p.style.top=(r.bottom+4+window.scrollY)+'px';
+  p.style.right=(window.innerWidth-r.right)+'px';
+  p.classList.add('open');
+  setTimeout(()=>document.addEventListener('click',hideCLoneOnOutside,{once:true}),100);
+}
+function hideCLoneOnOutside(e){
+  const p=document.getElementById('clonePanel');
+  if(p&&!p.contains(e.target))p.classList.remove('open');
+}
+
+// ─── FILE VIEWER ─────────────────────────────────────────────────
+function renderFileView(owner,name,filePath){
+  const me=Auth.current();
+  const r=Repo.get(owner,name);
+  const file=r?.files?.[filePath];
+  if(!r||!file){
+    document.getElementById('app').innerHTML=header(me)+`<div class="empty" style="margin-top:40px"><i class="fas fa-file-slash"></i><h3>File not found</h3><a class="btn btn-green" href="#repo/${esc(owner)}/${esc(name)}">Back to repo</a></div>`;
+    return;
+  }
+  const isOwner=me===owner;
+  const lc=Repo.lastCommit(owner,name,filePath);
+  const parts=filePath.split('/');
+  const crumbs=parts.map((p,i)=>{
+    const path=parts.slice(0,i+1).join('/');
+    const isLast=i===parts.length-1;
+    return isLast?`<strong>${esc(p)}</strong>`:`<a href="#repo/${esc(owner)}/${esc(name)}${i===0?'':'/tree/'+esc(parts.slice(0,i).join('/'))}">${esc(p)}</a>`;
+  }).join(' <span>/</span> ');
+
+  let body='';
+  if(file.type==='image'||isImage(filePath)){
+    body=`<div style="padding:24px;text-align:center"><img src="${file.content}" alt="${esc(filePath)}" style="max-width:100%;border-radius:6px;max-height:600px"></div>`;
+  } else {
+    const lines=(file.content||'').split('\n');
+    const nums=lines.map((_,i)=>`${i+1}`).join('\n');
+    const content=esc(file.content||'');
+    body=`<div class="lnum-wrap"><pre class="lnums">${nums}</pre><pre>${content}</pre></div>`;
+  }
+
+  document.getElementById('app').innerHTML=`
+  ${header(me)}
+  <div class="editor-wrap">
+    <div class="editor-hd">
+      <div class="bcrumb">
+        <a href="#repo/${esc(owner)}/${esc(name)}">${esc(name)}</a>
+        <span>/</span> ${crumbs}
+      </div>
+    </div>
+    ${lc?`<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:13px;color:var(--fg2)">
+      ${avatarHtml(lc.author,'av20')} <a href="#profile/${esc(lc.author)}" style="color:var(--fg);font-weight:600">${esc(lc.author)}</a>
+      <span>${esc(lc.message)}</span> <span class="chash">${esc(lc.hash)}</span> <span>${timeAgo(lc.date)}</span>
+    </div>`:''}
+    <div class="fview">
+      <div class="fview-hd">
+        <div class="fview-meta">
+          <span>${(file.content||'').split('\n').length} lines</span>
+          <span>${fmtBytes(file.size||0)}</span>
+        </div>
+        <div class="fview-actions">
+          ${isOwner?`<a href="#repo/${esc(owner)}/${esc(name)}/edit/${esc(filePath)}" class="btn btn-sm btn-ghost"><i class="fas fa-pencil"></i> Edit</a>
+          <button class="btn btn-sm btn-ghost" onclick="openDelFile('${esc(owner)}','${esc(name)}','${esc(filePath)}')"><i class="fas fa-trash"></i></button>`:''}
+          <button class="btn btn-sm btn-ghost" onclick="copyFileContent('${esc(filePath)}')"><i class="fas fa-clipboard"></i></button>
+        </div>
+      </div>
+      <div class="fview-body">${body}</div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <a href="#repo/${esc(owner)}/${esc(name)}${parts.length>1?'/tree/'+esc(parts.slice(0,-1).join('/'))  :''}" class="btn"><i class="fas fa-arrow-left"></i> Back</a>
+    </div>
+  </div>`;
+  setupSearch();
+}
+
+function copyFileContent(filePath){
+  const r=parseRoute();
+  const [,owner,name]=r.parts;
+  const repo=Repo.get(owner,name);
+  if(repo?.files?.[filePath]){
+    navigator.clipboard.writeText(repo.files[filePath].content||'').catch(()=>{});
+    toast('Copied to clipboard','ok');
+  }
+}
+
+// ─── FILE EDITOR ────────────────────────────────────────────────
+function renderFileEditor(owner,name,filePath,isNew){
+  const me=Auth.current();
+  if(me!==owner){toast('You do not have permission to edit this repository.','er');nav(`#repo/${owner}/${name}`);render();return;}
+  const r=Repo.get(owner,name);
+  if(!r){nav('#dashboard');render();return;}
+
+  const existing=!isNew&&filePath?r.files[filePath]:null;
+  const defaultMsg=existing?`Update ${filePath.split('/').pop()}`:`Create ${filePath||'new-file.md'}`;
+  const parts=filePath?filePath.split('/'):[];
+  const dirPath=parts.slice(0,-1).join('/');
+  const fileName=parts[parts.length-1]||'';
+
+  const crumbs=(dirPath?dirPath.split('/').map((p,i,arr)=>{
+    const path=arr.slice(0,i+1).join('/');
+    return`<a href="#repo/${esc(owner)}/${esc(name)}/tree/${esc(path)}">${esc(p)}</a>`;
+  }).join(' <span>/</span> '):'');
+
+  document.getElementById('app').innerHTML=`
+  ${header(me)}
+  <div class="editor-wrap">
+    <div class="editor-hd">
+      <div class="bcrumb">
+        <a href="#repo/${esc(owner)}/${esc(name)}">${esc(name)}</a>
+        ${crumbs?`<span>/</span> ${crumbs} <span>/</span>`:' <span>/</span> '}
+        ${isNew?`<input class="fname-input" id="fileNameInput" placeholder="Name your file..." value="${esc(fileName)}">`:`<strong>${esc(fileName)}</strong>`}
+        <span style="color:var(--fg2);margin-left:8px;font-size:12px">${isNew?'new file':'editing'}</span>
+      </div>
+    </div>
+    <div class="editor-pane">
+      <div class="editor-bar">
+        <span id="editorLines">1 line</span>
+        <span style="margin-left:auto">${esc(filePath||'...')}</span>
+      </div>
+      <textarea class="editor-area" id="editorArea" placeholder="Start typing...">${esc(existing?.content||'')}</textarea>
+    </div>
+    <div class="commit-pane">
+      <h3><i class="fas fa-code-commit" style="margin-right:8px;color:var(--green)"></i>Commit changes</h3>
+      <div class="fg"><label class="fl">Commit message</label><input class="fi" id="commitMsg" value="${esc(defaultMsg)}"></div>
+      <div class="fg"><label class="fl">Extended description <small>(optional)</small></label><textarea class="fta" id="commitDesc" placeholder="Add an optional extended description..."></textarea></div>
+      <div style="display:flex;gap:8px;margin-top:4px">
+        <button class="btn btn-green" onclick="saveFile('${esc(owner)}','${esc(name)}','${esc(dirPath)}',${isNew})">${isNew?'Commit new file':'Commit changes'}</button>
+        <a href="#repo/${esc(owner)}/${esc(name)}${filePath&&!isNew?'/blob/'+esc(filePath):''}" class="btn">Cancel</a>
+      </div>
+    </div>
+  </div>`;
+
+  const area=document.getElementById('editorArea');
+  const lineCount=document.getElementById('editorLines');
+  area.addEventListener('input',()=>{
+    const lines=area.value.split('\n').length;
+    lineCount.textContent=lines+' line'+(lines!==1?'s':'');
+  });
+  // Tab key in editor
+  area.addEventListener('keydown',e=>{
+    if(e.key==='Tab'){e.preventDefault();const s=area.selectionStart,end=area.selectionEnd;area.value=area.value.substring(0,s)+'  '+area.value.substring(end);area.selectionStart=area.selectionEnd=s+2;}
+  });
+  setupSearch();
+}
+
+function saveFile(owner,name,dir,isNew){
+  const area=document.getElementById('editorArea');
+  const msgEl=document.getElementById('commitMsg');
+  let path;
+  if(isNew){
+    const nameInput=document.getElementById('fileNameInput');
+    const fname=(nameInput?.value||'').trim();
+    if(!fname){toast('Please enter a file name.','er');nameInput?.focus();return;}
+    if(!/^[^/\\:*?"<>|]+$/.test(fname)){toast('Invalid file name.','er');return;}
+    path=dir?dir+'/'+fname:fname;
+  } else {
+    path=parseRoute().parts.slice(4).join('/');
+  }
+  const content=area.value;
+  const msg=(msgEl?.value||'').trim()||'Update '+path;
+  Repo.saveFile(owner,name,path,content,msg,'text');
+  toast('Changes committed!','ok');
+  nav(`#repo/${owner}/${name}/blob/${path}`);
+  render();
+}
+
+// ─── COMMIT HISTORY ─────────────────────────────────────────────
+function renderCommits(owner,name){
+  const me=Auth.current();
+  const r=Repo.get(owner,name);
+  if(!r){nav('#dashboard');render();return;}
+  const commits=[...r.commits].reverse();
+
+  document.getElementById('app').innerHTML=`
+  ${header(me)}
+  <div class="repo-top" style="padding-bottom:0">
+    <div class="repo-top-row" style="padding-bottom:10px">
+      <div class="repo-crumb">
+        <i class="fas fa-clock-rotate-left" style="color:var(--fg2)"></i>
+        <a href="#profile/${esc(owner)}">${esc(owner)}</a>
+        <span class="sep">/</span>
+        <a href="#repo/${esc(owner)}/${esc(name)}" class="rl">${esc(name)}</a>
+        <span class="sep">/</span>
+        <span style="color:var(--fg)">Commits</span>
+      </div>
+    </div>
+  </div>
+  <div class="commits-wrap">
+    <div style="margin-bottom:16px;font-size:14px;color:var(--fg2)"><strong style="color:var(--fg)">${commits.length}</strong> commits on <strong style="color:var(--fg)">main</strong></div>
+    ${commits.length===0?`<div class="empty"><i class="fas fa-code-commit"></i><h3>No commits yet</h3><p>Start by adding files to this repository.</p></div>`:''}
+    ${commits.map(c=>`
+    <div class="commit-item">
+      <div>
+        <div class="citem-msg">${esc(c.message)}</div>
+        <div class="citem-meta">
+          ${avatarHtml(c.author,'av20')}
+          <a href="#profile/${esc(c.author)}" style="color:var(--fg);font-weight:600">${esc(c.author)}</a>
+          committed ${timeAgo(c.date)}
+          <span style="color:var(--fg3)">•</span>
+          <span>Changed: ${(c.files||[]).map(f=>`<span style="color:var(--blue)">${esc(f)}</span>`).join(', ')}</span>
+        </div>
+      </div>
+      <div>
+        <code class="chash">${esc(c.hash)}</code>
+      </div>
+    </div>`).join('')}
+    <div style="margin-top:16px"><a href="#repo/${esc(owner)}/${esc(name)}" class="btn"><i class="fas fa-arrow-left"></i> Back to repository</a></div>
+  </div>`;
+  setupSearch();
+}
+
+// ─── PROFILE ─────────────────────────────────────────────────────
+function renderProfile(username){
+  const me=Auth.current();
+  const user=Auth.user(username);
+  if(!user){document.getElementById('app').innerHTML=header(me)+`<div class="empty" style="margin-top:40px"><i class="fas fa-user-slash"></i><h3>User not found</h3><a class="btn btn-green" href="#dashboard">Go home</a></div>`;return;}
+  const repos=Repo.list(username).sort((a,b)=>b.createdAt-a.createdAt);
+  const stars=DB.stars()[username]||[];
+  const isMe=me===username;
+
+  document.getElementById('app').innerHTML=`
+  ${header(me)}
+  <div class="profile-wrap">
+    <aside>
+      <div class="profile-pic">${avatarHtml(username,'av64')}</div>
+      <div class="profile-name">${esc(username)}</div>
+      <div class="profile-login" style="color:var(--fg2)">${esc(user.email||'')}</div>
+      ${user.bio?`<div class="profile-bio">${esc(user.bio)}</div>`:''}
+      ${isMe?`
+      <button class="btn" style="width:100%;justify-content:center;margin-bottom:12px" onclick="openEditProfile()"><i class="fas fa-user-edit"></i> Edit profile</button>
+      `:''}
+      <div class="follow-counts">
+        <span><strong>${repos.length}</strong> repositories</span>
+        <span><strong>${stars.length}</strong> starred</span>
+      </div>
+      ${user.location?`<div class="profile-meta"><i class="fas fa-map-marker-alt"></i>${esc(user.location)}</div>`:''}
+      ${user.website?`<div class="profile-meta"><i class="fas fa-link"></i><a href="${esc(user.website)}" target="_blank">${esc(user.website)}</a></div>`:''}
+      <div class="profile-meta"><i class="fas fa-calendar-alt"></i>Joined ${new Date(user.createdAt||Date.now()).toLocaleDateString('en-US',{month:'long',year:'numeric'})}</div>
+    </aside>
+    <main>
+      ${isMe?`<div id="editProfileForm" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:16px;margin-bottom:16px">
+        <h3 style="margin-bottom:12px;font-weight:600">Edit Profile</h3>
+        <div class="fg"><label class="fl">Bio</label><input class="fi" id="profBio" value="${esc(user.bio||'')}" placeholder="Tell us a little about yourself..."></div>
+        <div class="frow">
+          <div class="fg"><label class="fl">Location</label><input class="fi" id="profLocation" value="${esc(user.location||'')}" placeholder="City, Country"></div>
+          <div class="fg"><label class="fl">Website</label><input class="fi" id="profWebsite" value="${esc(user.website||'')}" placeholder="https://example.com"></div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-green" onclick="saveProfile('${esc(username)}')">Save profile</button>
+          <button class="btn" onclick="document.getElementById('editProfileForm').style.display='none'">Cancel</button>
+        </div>
+      </div>`:''}
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+        <h2 style="font-size:16px;font-weight:600"><i class="fas fa-book" style="margin-right:8px;color:var(--fg2)"></i>Repositories <span style="color:var(--fg2);font-size:14px;font-weight:400">${repos.length}</span></h2>
+        ${isMe?`<button class="btn btn-green btn-sm" onclick="openOv('ovNewRepo')"><i class="fas fa-plus"></i> New</button>`:''}
+      </div>
+      <div id="profileRepos">
+        ${renderRepoCards(repos,me)}
+        ${repos.length===0?`<div class="empty"><i class="fas fa-book-open"></i><h3>${isMe?'Create your first repository!':'No public repositories.'}</h3>${isMe?`<button class="btn btn-green" onclick="openOv('ovNewRepo')"><i class="fas fa-plus"></i> New repository</button>`:''}</div>`:''}
+      </div>
+    </main>
+  </div>`;
+  setupNewRepoModal(me);
+  setupSearch();
+}
+function openEditProfile(){
+  const f=document.getElementById('editProfileForm');
+  if(f)f.style.display=f.style.display==='none'?'':'none';
+}
+function saveProfile(username){
+  const bio=document.getElementById('profBio')?.value||'';
+  const location=document.getElementById('profLocation')?.value||'';
+  const website=document.getElementById('profWebsite')?.value||'';
+  Auth.updateProfile(username,{bio,location,website});
+  toast('Profile updated!','ok');
+  nav('#profile/'+username);render();
+}
+
+// ─── DEL REPO MODAL ──────────────────────────────────────────────
+function openDelRepo(owner,name){
+  document.getElementById('delRepoConfirm').value='';
+  document.getElementById('delRepoConfirm').placeholder=name;
+  openOv('ovDelRepo');
+  document.getElementById('btnDelRepoConfirm').onclick=()=>{
+    if(document.getElementById('delRepoConfirm').value!==name){
+      toast('Repository name does not match.','er');return;
+    }
+    Repo.delete(owner,name);
+    closeOv('ovDelRepo');
+    toast('Repository deleted.','ok');
+    nav('#dashboard');render();
+  };
+}
+function setupDelRepoModal(owner,name){
+  document.getElementById('delRepoConfirm')?.addEventListener('input',function(){
+    document.getElementById('btnDelRepoConfirm').style.opacity=this.value===name?'1':'.5';
+  });
+}
+
+// ─── DEL FILE MODAL ──────────────────────────────────────────────
+function openDelFile(owner,name,filePath){
+  State.pendingDelFile={owner,name,filePath};
+  document.getElementById('delFileName').textContent=filePath;
+  document.getElementById('delFileMsg').value='Delete '+filePath.split('/').pop();
+  openOv('ovDelFile');
+  document.getElementById('btnDelFileConfirm').onclick=()=>{
+    const {owner,name,filePath}=State.pendingDelFile;
+    const msg=document.getElementById('delFileMsg').value||'Delete '+filePath;
+    Repo.deleteFile(owner,name,filePath,msg);
+    closeOv('ovDelFile');
+    toast('File deleted.','ok');
+    const parts=filePath.split('/');
+    const dir=parts.slice(0,-1).join('/');
+    nav(`#repo/${owner}/${name}${dir?'/tree/'+dir:''}`);
+    render();
+  };
+}
+
+// ─── FORK ────────────────────────────────────────────────────────
+function handleFork(owner,name){
+  const me=Auth.current();
+  if(!me)return;
+  if(me===owner){toast('You cannot fork your own repository.','er');return;}
+  const newName=Repo.fork(owner,name,me);
+  if(typeof newName==='string'&&!newName.startsWith('Source')){
+    toast(`Forked to ${me}/${newName}!`,'ok');
+    nav(`#repo/${me}/${newName}`);render();
+  } else {
+    toast(newName,'er');
+  }
+}
+
+// ─── STAR (repo page) ────────────────────────────────────────────
+function handleStarRepo(owner,name){
+  const me=Auth.current();if(!me)return;
+  const wasStarred=Repo.toggleStar(`${owner}/${name}`,me);
+  const r=Repo.get(owner,name);
+  document.getElementById('starCount').textContent=r?r.stars||0:0;
+  const icon=document.querySelector('#starBtn .fa-star');
+  const label=document.getElementById('starLabel');
+  if(icon){icon.className=`${wasStarred?'fas':'far'} fa-star`;icon.style.color=wasStarred?'var(--yellow)':'var(--fg2)';}
+  if(label)label.textContent=wasStarred?'Unstar':'Star';
+  toast(wasStarred?'Repository starred':'Repository unstarred',wasStarred?'ok':'inf');
+}
+
+// ─── SEARCH ─────────────────────────────────────────────────────
+function setupSearch(){
+  const el=document.getElementById('globalSearch');
+  if(!el)return;
+  el.addEventListener('keydown',e=>{
+    if(e.key!=='Enter')return;
+    const q=el.value.trim().toLowerCase();
+    if(!q)return;
+    // Try to navigate to user/repo
+    if(q.includes('/')){
+      const [u,r]=q.split('/');
+      const repo=Repo.get(u,r);
+      if(repo){nav(`#repo/${u}/${r}`);render();return;}
+    }
+    // Try user profile
+    const user=Auth.user(q);
+    if(user){nav(`#profile/${q}`);render();return;}
+    // Search repos
+    const all=Repo.listAll().filter(r=>r.name.toLowerCase().includes(q)||(r.desc||'').toLowerCase().includes(q));
+    if(all.length===1){nav(`#repo/${all[0].owner}/${all[0].name}`);render();}
+    else toast('No results found for: '+q,'er');
+  });
+}
+
+// ─── MODAL HELPERS ───────────────────────────────────────────────
+function openOv(id){document.getElementById(id)?.classList.add('open');}
+function closeOv(id){document.getElementById(id)?.classList.remove('open');}
+document.addEventListener('click',e=>{
+  if(e.target.classList.contains('ov')){e.target.classList.remove('open');}
+  if(e.target.dataset.ov){closeOv(e.target.dataset.ov);}
+  if(e.target.dataset.nav){nav(e.target.dataset.nav);render();}
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape')document.querySelectorAll('.ov.open').forEach(o=>o.classList.remove('open'));
+});
+
+// ═══════════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════════
+window.addEventListener('hashchange',render);
+window.addEventListener('load',()=>{
+  if(!location.hash||location.hash==='#')location.hash=Auth.current()?'#dashboard':'#auth';
+  render();
+});
+</script>
+</body>
+</html>
